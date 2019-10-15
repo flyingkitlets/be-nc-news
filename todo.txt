@@ -1,8 +1,16 @@
 GET /api/users/:username
     :)  200 - successfully found user and returns user √ 
     :(  404 - 'not found' √ 
+        405 - method not allowed √ 
 
 TOPICS 
     /GET ALL TOPICS √
     :)  200 - successfully got topics √
     :(  404 - 'not found' √ 
+        405 - method not allowed √
+
+GET /api/articles/:article_id
+    :)  200 - successfully got article √ 
+    :(  404 - 'not found' √ 
+        405 - method not allowed √  
+

@@ -1,6 +1,4 @@
 exports.customErrorHandling = (err, req, res, next) => {
-  console.log(err);
-  // console.log(err);
   if (err.code === "22P02")
     res.status(400).send({ msg: "bad request - invalid entry type" });
   else if (err.code === "42703")
@@ -16,4 +14,8 @@ exports.customErrorHandling = (err, req, res, next) => {
 
 exports.handle500Errors = (err, rew, res, next) => {
   console.log(err);
+};
+
+exports.send405Error = (req, res, next) => {
+  res.status(405).send({ msg: "method not allowed" });
 };
