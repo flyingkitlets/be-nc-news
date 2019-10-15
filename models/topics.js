@@ -1,6 +1,6 @@
 const connection = require("../db/connection");
 
-exports.fetchAllTopics = ({ sort_by = "topic_id", order_by }) => {
+exports.fetchAllTopics = ({ sort_by = "slug", order_by }) => {
   return connection
     .select("*")
     .from("topics")
