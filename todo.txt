@@ -1,3 +1,31 @@
+GET /api/articles/:article_id/comments
+
+Responds with:
+an array of comments for the given article_id of which each comment should have the following properties:
+comment_id
+votes
+created_at
+author which is the username from the users table
+body
+Accepts queries
+sort_by, which sorts the comments by any valid column (defaults to created_at)
+order, which can be set to asc or desc for ascending or descending (defaults to descending)
+
+
+    :)  200 - successfully posted, returns comment √ 
+        404 - not found √
+        400 - bad request √ 
+        405 - method not allowed √ 
+
+
+
+POST /api/articles/:article_id/comments
+    
+    :)  200 - successfully posted, returns comment √ 
+        404 - not found √
+        400 - bad request √ 
+        405 - method not allowed √ 
+
 GET /api/users/:username
     :)  200 - successfully found user and returns user √ 
     :(  404 - 'not found' √ 
@@ -13,4 +41,13 @@ GET /api/articles/:article_id
     :)  200 - successfully got article √ 
     :(  404 - 'not found' √ 
         405 - method not allowed √  
+
+PATCH /api/articles/:article_id
+    :)  200 - successfully got article √ 
+    :(  404 - 'not found' √ 
+        405 - method not allowed √
+        400 - empty body √ 
+        400 - invalid key √ 
+        400 - inc_votes is wrong data-type √ 
+        400 - tries to patch unauthorised key √ 
 

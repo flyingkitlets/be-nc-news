@@ -1,36 +1,12 @@
 const connection = require("../db/connection");
 
-const { makeRefObj } = require("../db/utils/utils");
-
 exports.fetchArticleById = ({ article_id }) => {
-  let commentCount = 0;
-  return connection
-    .select("*")
-    .from("comments")
-    .where("article_id", article_id)
-    .then(comments => {
-      commentCount = comments.length;
-      return connection
-        .select(
-          "article_id",
-          "author",
-          "body",
-          "created_at",
-          "title",
-          "topic",
-          "votes"
-        )
-        .from("articles")
-        .where("article_id", article_id);
-    })
-    .then(output => {
-      const withCC = [];
-      output.forEach(obj => {
-        obj["comment_count"] = commentCount;
-        withCC.push(obj);
-      });
-      return withCC;
-    });
+  return connection("articles")
+    .select("articles.*")
+    .count({ comment_count: "articles.article_id" })
+    .leftJoin("comments", "articles.article_id", "comments.article_id")
+    .where("articles.article_id", article_id)
+    .groupBy("articles.article_id");
 };
 
 exports.updateArticleById = ({ body, params }) => {
@@ -38,4 +14,15 @@ exports.updateArticleById = ({ body, params }) => {
     .where("article_id", "=", `${params.article_id}`)
     .increment("votes", `${body.inc_votes}`)
     .returning("*");
+};
+
+exports.insertNewComment = ({ body, params }) => {
+  return connection("comments")
+    .where("article_id", "=", `${params.article_id}`)
+    .insert({
+      article_id: `${params.article_id}`,
+      author: `${body.username}`,
+      body: `${body.body}`
+    })
+    .returning(["body", "comment_id", "author", "article_id", "votes"]);
 };

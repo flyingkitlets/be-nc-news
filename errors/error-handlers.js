@@ -1,4 +1,5 @@
 exports.customErrorHandling = (err, req, res, next) => {
+  // console.log(err);
   if (err.code === "22P02")
     res.status(400).send({ msg: "bad request - invalid entry type" });
   else if (err.code === "42703")
