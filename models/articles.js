@@ -27,13 +27,62 @@ exports.insertNewComment = ({ body, params }) => {
     .returning(["body", "comment_id", "author", "article_id", "votes"]);
 };
 
-exports.fetchAllComments = ({
-  article_id,
-  sort_by = "created_at",
-  order_by = "desc"
-}) => {
+exports.fetchAllComments = (
+  { article_id },
+  { sort_by = "created_at", order_by = "desc" }
+) => {
+  const allowedValues = ["asc", "desc"];
+  if (!allowedValues.includes(order_by)) {
+    order_by = "desc";
+  }
   return connection("comments")
     .select(["comment_id", "votes", "created_at", "body", "author"])
     .where("article_id", article_id)
     .orderBy(sort_by, order_by);
+};
+
+exports.fetchAllArticles = ({
+  sort_by = "created_at",
+  order_by = "desc",
+  author = "invalid",
+  topic = "invalid"
+}) => {
+  const allowedValues = ["asc", "desc"];
+  if (!allowedValues.includes(order_by)) {
+    order_by = "desc";
+  }
+  let validUsernames = [];
+  let validTopics = [];
+  return connection("users")
+    .select("username")
+    .then(usernames => {
+      validUsernames = usernames.map(username => {
+        return username.username;
+      });
+    })
+    .then(() => {
+      return connection("topics").select("topics");
+    })
+    .then(topics => {
+      validTopics = topics.map(topic => {
+        return topic.topic;
+      });
+    })
+    .then(() => {
+      if (!validUsernames.includes(author)) {
+        author = "invalid";
+      }
+      if (!validTopics.includes(topic)) {
+        topic = "invalid";
+      }
+      return connection("articles")
+        .select("articles.*")
+        .orderBy(sort_by, order_by)
+        .count({ comment_count: "articles.article_id" })
+        .groupBy("articles.article_id")
+        .modify(query => {
+          if (author !== "invalid") query.where({ author });
+          if (topic !== "invalid") query.where({ topic });
+        });
+    });
 };

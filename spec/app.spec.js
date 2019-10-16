@@ -81,6 +81,65 @@ describe.only("/api", () => {
         });
     });
   });
+  describe("/articles", () => {
+    it("GET / responds with status 200", () => {
+      return request.get("/api/articles").expect(200);
+    });
+    it("GET / sends all articles", () => {
+      return request
+        .get("/api/articles")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles.length).to.equal(12);
+          expect(body.articles[0]).to.contain.keys(
+            "article_id",
+            "votes",
+            "title",
+            "comment_count",
+            "topic",
+            "created_at",
+            "body",
+            "author"
+          );
+        });
+    });
+    it("GET / sends all articles in correct order", () => {
+      return request
+        .get("/api/articles")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles).to.be.sortedBy("created_at", {
+            descending: true
+          });
+        });
+    });
+    it("GET / sends all articles by author", () => {
+      return request
+        .get("/api/articles?author=butter_bridge")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles.length).to.equal(3);
+          let allTrue = true;
+          body.articles.forEach(article => {
+            if (article.author !== "butter_bridge") allTrue = false;
+          });
+          expect(allTrue).to.equal(true);
+        });
+    });
+    it("GET / sends 400 when invalid author by author", () => {
+      return request
+        .get("/api/articles?author=butterscotch_bridge")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles.length).to.equal(0);
+          let allTrue = true;
+          body.articles.forEach(article => {
+            if (article.author !== "butter_bridge") allTrue = false;
+          });
+          expect(allTrue).to.equal(true);
+        });
+    });
+  });
   describe("/articles/:article_id", () => {
     it("Responds with 405 for invalid method", () => {
       const invalidMethods = ["put", "delete"];
@@ -242,6 +301,62 @@ describe.only("/api", () => {
     it("GET / sends all comments with default ordering by created_at when not given a query", () => {
       return request
         .get("/api/articles/1/comments")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.comments.length).to.equal(13);
+          expect(body.comments).to.be.sortedBy("created_at", {
+            descending: true
+          });
+        });
+    });
+    it("GET / sends all comments with custom ordering by comment_id with default sorting (descending)", () => {
+      return request
+        .get("/api/articles/1/comments?sort_by=comment_id")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.comments.length).to.equal(13);
+          expect(body.comments).to.be.sortedBy("comment_id", {
+            descending: true
+          });
+        });
+    });
+    it("GET / sends all comments with custom ordering by default (created at) ascending", () => {
+      return request
+        .get("/api/articles/1/comments?order_by=asc")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.comments.length).to.equal(13);
+          expect(body.comments).to.be.sortedBy("created_at", {
+            descending: false
+          });
+        });
+    });
+    it("GET / sends all comments with custom ordering by comment_id ascending", () => {
+      return request
+        .get("/api/articles/1/comments?sort_by=comment_id&order_by=asc")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.comments.length).to.equal(13);
+          expect(body.comments).to.be.sortedBy("comment_id", {
+            descending: false
+          });
+        });
+    });
+    it("GET / returns 404 when endpoint not found", () => {
+      return request.get("/api/articles/9999/comments").expect(404);
+    });
+    it("GET / returns 400 when passed an invalid sort_by", () => {
+      return request
+        .get("/api/articles/1/comments?sort_by=asci")
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).to.equal("bad request - column not found");
+        });
+    });
+
+    it("GET / returns 200 and defaults to created_at descending when passed an invalid order_by", () => {
+      return request
+        .get("/api/articles/1/comments?order_by=slug")
         .expect(200)
         .then(({ body }) => {
           expect(body.comments.length).to.equal(13);

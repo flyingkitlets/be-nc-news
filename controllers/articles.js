@@ -2,7 +2,8 @@ const {
   fetchArticleById,
   updateArticleById,
   insertNewComment,
-  fetchAllComments
+  fetchAllComments,
+  fetchAllArticles
 } = require("../models/articles.js");
 
 getArticlesById = (req, res, next) => {
@@ -18,12 +19,23 @@ getArticlesById = (req, res, next) => {
 };
 
 getAllComments = (req, res, next) => {
-  fetchAllComments(req.params)
+  fetchAllComments(req.params, req.query)
     .then(comments => {
       if (comments.length === 0) {
         res.status(404).send({ msg: "not found" });
       } else {
         res.status(200).send({ comments });
+      }
+    })
+    .catch(next);
+};
+getAllArticles = (req, res, next) => {
+  fetchAllArticles(req.query)
+    .then(articles => {
+      if (articles.length === 0) {
+        res.status(404).send({ msg: "not found" });
+      } else {
+        res.status(200).send({ articles });
       }
     })
     .catch(next);
@@ -52,6 +64,7 @@ postNewComment = (req, res, next) => {
 module.exports = {
   getArticlesById,
   getAllComments,
+  getAllArticles,
   postNewComment,
   patchArticleById
 };
