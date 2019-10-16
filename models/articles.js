@@ -26,3 +26,14 @@ exports.insertNewComment = ({ body, params }) => {
     })
     .returning(["body", "comment_id", "author", "article_id", "votes"]);
 };
+
+exports.fetchAllComments = ({
+  article_id,
+  sort_by = "created_at",
+  order_by = "desc"
+}) => {
+  return connection("comments")
+    .select(["comment_id", "votes", "created_at", "body", "author"])
+    .where("article_id", article_id)
+    .orderBy(sort_by, order_by);
+};

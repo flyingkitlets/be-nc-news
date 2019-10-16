@@ -224,5 +224,31 @@ describe.only("/api", () => {
           expect(body.msg).to.equal("bad request - key not found");
         });
     });
+    it("GET / sends an array of all comments with desired keys", () => {
+      return request
+        .get("/api/articles/1/comments")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.comments.length).to.equal(13);
+          expect(body.comments[0]).to.contain.keys(
+            "comment_id",
+            "votes",
+            "created_at",
+            "body",
+            "author"
+          );
+        });
+    });
+    it("GET / sends all comments with default ordering by created_at when not given a query", () => {
+      return request
+        .get("/api/articles/1/comments")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.comments.length).to.equal(13);
+          expect(body.comments).to.be.sortedBy("created_at", {
+            descending: true
+          });
+        });
+    });
   });
 });
