@@ -3,8 +3,6 @@ DELETE /api/comments/:comment_id
     :(  404 - 'not found' √ 
         405 - method not allowed √ 
 
-
-
 PATCH /api/comments/:comment_id
     :)  200 - successfully got comment √ 
     :(  404 - 'not found' √ 

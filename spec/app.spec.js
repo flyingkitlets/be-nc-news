@@ -10,10 +10,13 @@ chai.use(chaiSorted);
 describe("/api", () => {
   beforeEach(() => connection.seed.run());
   after(() => connection.destroy());
-  it("invalid path / responds with status 404", () => {
-    return request.get("/api/topicss").expect(404);
+  it("returns a JSON with information of api", () => {
+    return request.get("/api").expect(200);
   });
   describe("/topics", () => {
+    it("invalid path / responds with status 404", () => {
+      return request.get("/api/topicss").expect(404);
+    });
     it("Responds with 405 for invalid method", () => {
       const invalidMethods = ["patch", "put", "delete"];
       const methodPromises = invalidMethods.map(method => {
