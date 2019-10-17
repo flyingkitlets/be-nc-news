@@ -1,15 +1,20 @@
 GET /api/articles
 
     :)  200 - returns all articles √ 
-            - also with default ordering and/or sorting 
-            - with authors query  
-            - with topics query  
-            - with authors & topics query  
-            - with authors & topics & sort_by query  
-            - with authors & topics & order_by query  
-            - with authors & topics & order_by & sort_by query  
+            - also with default ordering and/or sorting √ 
+            - with authors query  √ 
+            - with topics query  √ 
+            - with authors & topics query √ 
+            - with authors & topics & sort_by query  √ 
+            - with authors & topics & order_by query  √ 
+            - with authors & topics & order_by & sort_by query √  
     
-
+    :(  404 - not found √ 
+        400 - bad request - invalid author √ 
+        400 - bad request - invalid topic √ 
+        400 - bad request - invalid topic but valid author √ 
+        400 - bad request - invalid author but valid topic √    
+        
 
 
 GET /api/articles/:article_id/comments

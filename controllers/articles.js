@@ -32,6 +32,7 @@ getAllComments = (req, res, next) => {
 getAllArticles = (req, res, next) => {
   fetchAllArticles(req.query)
     .then(articles => {
+      // console.log(articles);
       if (articles.length === 0) {
         res.status(404).send({ msg: "not found" });
       } else {

@@ -1,5 +1,11 @@
 exports.customErrorHandling = (err, req, res, next) => {
   // console.log(err);
+  if(err.status === 400 && err.msg === 'bad request - user not found'){
+    res.status(400).send({ msg: "bad request - user not found" });
+  }
+  if(err.status === 400 && err.msg === 'bad request - topic not found'){
+    res.status(400).send({ msg: "bad request - topic not found" });
+  }
   if (err.code === "22P02")
     res.status(400).send({ msg: "bad request - invalid entry type" });
   else if (err.code === "42703")

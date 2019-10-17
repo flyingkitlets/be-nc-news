@@ -44,8 +44,8 @@ exports.fetchAllComments = (
 exports.fetchAllArticles = ({
   sort_by = "created_at",
   order_by = "desc",
-  author = "invalid",
-  topic = "invalid"
+  author,
+  topic
 }) => {
   const allowedValues = ["asc", "desc"];
   if (!allowedValues.includes(order_by)) {
@@ -61,19 +61,33 @@ exports.fetchAllArticles = ({
       });
     })
     .then(() => {
-      return connection("topics").select("topics");
+      return connection("topics").select("*");
     })
     .then(topics => {
       validTopics = topics.map(topic => {
-        return topic.topic;
+        return topic.slug;
       });
     })
     .then(() => {
-      if (!validUsernames.includes(author)) {
-        author = "invalid";
+      if (author) {
+        if (!validUsernames.includes(author)) {
+          author = "invalid";
+        }
+        if (author === "invalid")
+          return Promise.reject({
+            status: 400,
+            msg: "bad request - user not found"
+          });
       }
-      if (!validTopics.includes(topic)) {
-        topic = "invalid";
+      if (topic) {
+        if (!validTopics.includes(topic)) {
+          topic = "invalid";
+        }
+        if (topic === "invalid")
+          return Promise.reject({
+            status: 400,
+            msg: "bad request - topic not found"
+          });
       }
       return connection("articles")
         .select("articles.*")
@@ -81,8 +95,12 @@ exports.fetchAllArticles = ({
         .count({ comment_count: "articles.article_id" })
         .groupBy("articles.article_id")
         .modify(query => {
-          if (author !== "invalid") query.where({ author });
-          if (topic !== "invalid") query.where({ topic });
+          if (author) {
+            if (author !== "invalid") query.where({ author });
+          }
+          if (topic) {
+            if (topic !== "invalid") query.where({ topic });
+          }
         });
     });
 };

@@ -126,17 +126,105 @@ describe.only("/api", () => {
           expect(allTrue).to.equal(true);
         });
     });
-    it("GET / sends 400 when invalid author by author", () => {
+    it("GET / sends all articles by topic", () => {
       return request
-        .get("/api/articles?author=butterscotch_bridge")
+        .get("/api/articles?topic=mitch")
         .expect(200)
         .then(({ body }) => {
-          expect(body.articles.length).to.equal(0);
+          expect(body.articles.length).to.equal(11);
           let allTrue = true;
+          body.articles.forEach(article => {
+            if (article.topic !== "mitch") allTrue = false;
+          });
+          expect(allTrue).to.equal(true);
+        });
+    });
+    it("GET / sends all articles by topic & author", () => {
+      return request
+        .get("/api/articles?topic=mitch&author=butter_bridge")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles.length).to.equal(3);
+          let allTrue = true;
+          body.articles.forEach(article => {
+            if (article.topic !== "mitch") allTrue = false;
+          });
           body.articles.forEach(article => {
             if (article.author !== "butter_bridge") allTrue = false;
           });
           expect(allTrue).to.equal(true);
+        });
+    });
+    it("GET / sends all articles by topic & author and sorted by custom column", () => {
+      return request
+        .get("/api/articles?topic=mitch&author=butter_bridge&sort_by=title")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles.length).to.equal(3);
+          let allTrue = true;
+          body.articles.forEach(article => {
+            if (article.topic !== "mitch") allTrue = false;
+          });
+          body.articles.forEach(article => {
+            if (article.author !== "butter_bridge") allTrue = false;
+          });
+          expect(allTrue).to.equal(true);
+          expect(body.articles).to.be.sortedBy("title", {
+            descending: true
+          });
+        });
+    });
+    it("GET / sends all articles by topic & author and sorted by custom column & ordered ascending", () => {
+      return request
+        .get(
+          "/api/articles?topic=mitch&author=butter_bridge&sort_by=title&order_by=asc"
+        )
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles.length).to.equal(3);
+          let allTrue = true;
+          body.articles.forEach(article => {
+            if (article.topic !== "mitch") allTrue = false;
+          });
+          body.articles.forEach(article => {
+            if (article.author !== "butter_bridge") allTrue = false;
+          });
+          expect(allTrue).to.equal(true);
+          expect(body.articles).to.be.sortedBy("title", {
+            descending: false
+          });
+        });
+    });
+    it("GET / sends 400 when invalid sort by author", () => {
+      return request
+        .get("/api/articles?author=butterscotch_bridge")
+        .expect(400)
+        .then(({ body: { msg } }) => {
+          expect(msg).to.equal("bad request - user not found");
+        });
+    });
+    it("GET / sends 400 when invalid sort by topic", () => {
+      return request
+        .get("/api/articles?topic=coding")
+        .expect(400)
+        .then(({ body: { msg } }) => {
+          expect(msg).to.equal("bad request - topic not found");
+        });
+    });
+    it("GET / sends 400 when invalid sort by topic but valid author", () => {
+      return request
+        .get("/api/articles?topic=mike&author=butter_bridge")
+        .expect(400)
+        .then(({ body: { msg } }) => {
+          expect(msg).to.equal("bad request - topic not found");
+        });
+    });
+    it("GET / sends 400 when invalid sort by author but valid topic", () => {
+      return request
+        .get("/api/articles?topic=mitch&author=butterscotch_bridge")
+        .expect(400)
+        .then(({ body: { msg } }) => {
+          expect(msg).to.equal("bad request - user not found");
         });
     });
   });
