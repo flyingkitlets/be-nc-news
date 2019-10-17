@@ -7,7 +7,7 @@ const { expect } = chai;
 const connection = require("../db/connection");
 chai.use(chaiSorted);
 
-describe.only("/api", () => {
+describe("/api", () => {
   beforeEach(() => connection.seed.run());
   after(() => connection.destroy());
   it("invalid path / responds with status 404", () => {
@@ -452,6 +452,83 @@ describe.only("/api", () => {
             descending: true
           });
         });
+    });
+  });
+  describe("/comments", () => {
+    describe("/:comment_id", () => {
+      it("Responds with 405 for invalid method", () => {
+        const invalidMethods = ["get", "put"];
+        const methodPromises = invalidMethods.map(method => {
+          return request[method]("/api/comments/comment_id")
+            .expect(405)
+            .then(({ body: { msg } }) => {
+              expect(msg).to.equal("method not allowed");
+            });
+        });
+        return Promise.all(methodPromises);
+      });
+      it("PATCH / with no body responds with status 400", () => {
+        return request.patch("/api/comments/1").expect(400);
+      });
+      it("PATCH / responds with 200 and patched comment", () => {
+        return request
+          .patch("/api/comments/1")
+          .send({ inc_votes: "1" })
+          .expect(200)
+          .then(({ body }) => {
+            expect(body).to.eql({
+              comment_id: 1,
+              author: "butter_bridge",
+              article_id: 9,
+              body:
+                "Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!",
+              created_at: "2017-11-22T12:36:03.389Z",
+              votes: 17
+            });
+          });
+      });
+      it("PATCH / with wrong table name returns 400", () => {
+        return request
+          .patch("/api/comments/1")
+          .send({ inc_votess: "1" })
+          .expect(400)
+          .then(({ body: { msg } }) => {
+            expect(msg).to.equal("bad request - invalid entry type");
+          });
+      });
+      it("PATCH / with invalid data-type returns 400", () => {
+        return request
+          .patch("/api/comments/1")
+          .send({ inc_votes: "one" })
+          .expect(400)
+          .then(({ body: { msg } }) => {
+            expect(msg).to.equal("bad request - invalid entry type");
+          });
+      });
+      it("PATCH / responds with 400 when trying to patch unauthorised column", () => {
+        return request
+          .patch("/api/comments/1")
+          .send({ body: "new body" })
+          .expect(400)
+          .then(({ body: { msg } }) => {
+            expect(msg).to.equal("bad request - invalid entry type");
+          });
+      });
+      it("PATCH / responds with 404 when trying to patch non-existent id", () => {
+        return request
+          .patch("/api/comments/9999")
+          .send({ inc_votes: 1 })
+          .expect(404)
+          .then(({ body: { msg } }) => {
+            expect(msg).to.equal("path not found");
+          });
+      });
+      it("DELETE / with no body responds with status 204", () => {
+        return request.delete("/api/comments/1").expect(204);
+      });
+      it("DELETE / returns 404 if comment id not found", () => {
+        return request.delete("/api/comments/9999").expect(404);
+      });
     });
   });
 });

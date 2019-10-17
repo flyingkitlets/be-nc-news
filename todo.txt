@@ -1,3 +1,19 @@
+DELETE /api/comments/:comment_id
+    :)  202 - successfully deleted comment √ 
+    :(  404 - 'not found' √ 
+        405 - method not allowed √ 
+
+
+
+PATCH /api/comments/:comment_id
+    :)  200 - successfully got comment √ 
+    :(  404 - 'not found' √ 
+        405 - method not allowed √
+        400 - empty body √ 
+        400 - invalid key √ 
+        400 - inc_votes is wrong data-type √ 
+        400 - tries to patch unauthorised key √ 
+
 GET /api/articles
 
     :)  200 - returns all articles √ 
@@ -14,9 +30,7 @@ GET /api/articles
         400 - bad request - invalid topic √ 
         400 - bad request - invalid topic but valid author √ 
         400 - bad request - invalid author but valid topic √    
-        
-
-
+    
 GET /api/articles/:article_id/comments
 
     :)  200 - returns all comments √ 
