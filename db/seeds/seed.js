@@ -14,17 +14,17 @@ exports.seed = function(connection) {
     .then(() => {
       const topicsInsertions = connection("topics").insert(topicData);
       const usersInsertions = connection("users").insert(userData);
-      return Promise.all([topicsInsertions, usersInsertions])
-        .then(() => {
-          const newDates = formatDates(articleData);
-          return connection("articles")
-            .insert(newDates)
-            .returning("*");
-        })
-        .then(articleRows => {
-          const articleRef = makeRefObj(articleRows, "title", "article_id");
-          const formattedComments = formatComments(commentData, articleRef);
-          return connection("comments").insert(formattedComments);
-        });
+      return Promise.all([topicsInsertions, usersInsertions]);
+    })
+    .then(() => {
+      const newDates = formatDates(articleData);
+      return connection("articles")
+        .insert(newDates)
+        .returning("*");
+    })
+    .then(articleRows => {
+      const articleRef = makeRefObj(articleRows, "title", "article_id");
+      const formattedComments = formatComments(commentData, articleRef);
+      return connection("comments").insert(formattedComments);
     });
 };

@@ -85,8 +85,35 @@ describe("/api", () => {
     });
   });
   describe("/articles", () => {
+    it("Responds with 405 for invalid method", () => {
+      const invalidMethods = ["put", "patch", "delete"];
+      const methodPromises = invalidMethods.map(method => {
+        return request[method]("/api/articles")
+          .expect(405)
+          .then(({ body: { msg } }) => {
+            expect(msg).to.equal("method not allowed");
+          });
+      });
+      return Promise.all(methodPromises);
+    });
     it("GET / responds with status 200", () => {
       return request.get("/api/articles").expect(200);
+    });
+    it("GET / sends empty array and status 200 when passed user with no articles", () => {
+      return request
+        .get("/api/articles?author=lurker")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles.length).to.equal(0);
+        });
+    });
+    it("GET / sends empty array and status 200 when passed topic with no articles", () => {
+      return request
+        .get("/api/articles?topic=paper")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles.length).to.equal(0);
+        });
     });
     it("GET / sends all articles", () => {
       return request
@@ -116,6 +143,7 @@ describe("/api", () => {
           });
         });
     });
+
     it("GET / sends all articles by author", () => {
       return request
         .get("/api/articles?author=butter_bridge")
@@ -198,34 +226,34 @@ describe("/api", () => {
           });
         });
     });
-    it("GET / sends 400 when invalid sort by author", () => {
+    it("GET / sends 404 when invalid sort by author", () => {
       return request
         .get("/api/articles?author=butterscotch_bridge")
-        .expect(400)
+        .expect(404)
         .then(({ body: { msg } }) => {
           expect(msg).to.equal("bad request - user not found");
         });
     });
-    it("GET / sends 400 when invalid sort by topic", () => {
+    it("GET / sends 404 when invalid sort by topic", () => {
       return request
         .get("/api/articles?topic=coding")
-        .expect(400)
+        .expect(404)
         .then(({ body: { msg } }) => {
           expect(msg).to.equal("bad request - topic not found");
         });
     });
-    it("GET / sends 400 when invalid sort by topic but valid author", () => {
+    it("GET / sends 404 when invalid sort by topic but valid author", () => {
       return request
         .get("/api/articles?topic=mike&author=butter_bridge")
-        .expect(400)
+        .expect(404)
         .then(({ body: { msg } }) => {
           expect(msg).to.equal("bad request - topic not found");
         });
     });
-    it("GET / sends 400 when invalid sort by author but valid topic", () => {
+    it("GET / sends 404 when invalid sort by author but valid topic", () => {
       return request
         .get("/api/articles?topic=mitch&author=butterscotch_bridge")
-        .expect(400)
+        .expect(404)
         .then(({ body: { msg } }) => {
           expect(msg).to.equal("bad request - user not found");
         });
@@ -266,8 +294,21 @@ describe("/api", () => {
           });
         });
     });
-    it("PATCH / with no body responds with status 400", () => {
-      return request.patch("/api/articles/1").expect(400);
+    it("PATCH / with no body responds with status 200 and article", () => {
+      return request
+        .patch("/api/articles/1")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.article).to.eql({
+            article_id: 1,
+            title: "Living in the shadow of a great man",
+            body: "I find this existence challenging",
+            votes: 100,
+            topic: "mitch",
+            author: "butter_bridge",
+            created_at: "2018-11-15T12:21:54.171Z"
+          });
+        });
     });
     it("PATCH / responds with 200 and patched article", () => {
       return request
@@ -275,7 +316,7 @@ describe("/api", () => {
         .send({ inc_votes: "1" })
         .expect(200)
         .then(({ body }) => {
-          expect(body).to.eql({
+          expect(body.article).to.eql({
             article_id: 1,
             title: "Living in the shadow of a great man",
             body: "I find this existence challenging",
@@ -471,7 +512,20 @@ describe("/api", () => {
         return Promise.all(methodPromises);
       });
       it("PATCH / with no body responds with status 400", () => {
-        return request.patch("/api/comments/1").expect(400);
+        return request
+          .patch("/api/comments/1")
+          .expect(200)
+          .then(({ body }) => {
+            expect(body).to.eql({
+              comment_id: 1,
+              author: "butter_bridge",
+              article_id: 9,
+              body:
+                "Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!",
+              created_at: "2017-11-22T12:36:03.389Z",
+              votes: 16
+            });
+          });
       });
       it("PATCH / responds with 200 and patched comment", () => {
         return request

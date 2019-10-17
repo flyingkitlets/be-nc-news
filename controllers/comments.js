@@ -5,11 +5,11 @@ const {
 
 exports.patchCommentById = (req, res, next) => {
   updateCommentById(req)
-    .then(response => {
-      if (response.length === 0) {
-        res.status(404).send({ msg: "path not found" });
+    .then(comment => {
+      if (comment.length === 0) {
+        next({ status: 404, msg: "path not found" });
       } else {
-        res.status(200).send(response[0]);
+        res.status(200).send(comment[0]);
       }
     })
     .catch(next);
@@ -17,11 +17,11 @@ exports.patchCommentById = (req, res, next) => {
 
 exports.removeCommentById = (req, res, next) => {
   deleteCommentById(req)
-    .then(response => {
-      if (response < 1) {
-        res.status(404).send({ msg: "item not found" });
+    .then(comment => {
+      if (comment < 1) {
+        next({ status: 404, msg: "item not found" });
       } else {
-        res.status(204).send({ msg: `removed ${response} item(s)` });
+        res.status(204).send({ msg: `removed ${comment} item(s)` });
       }
     })
     .catch(next);
