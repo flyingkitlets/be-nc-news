@@ -596,13 +596,15 @@ describe("/api", () => {
           .send({})
           .expect(200)
           .then(({ body }) => {
-            expect(body.comment).to.eql({ comment_id: 1,
-              author: 'butter_bridge',
+            expect(body.comment).to.eql({
+              comment_id: 1,
+              author: "butter_bridge",
               article_id: 9,
               body:
-               'Oh, I\'ve got compassion running out of my nose, pal! I\'m the Sultan of Sentiment!',
-              created_at: '2017-11-22T12:36:03.389Z',
-              votes: 16 });
+                "Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!",
+              created_at: "2017-11-22T12:36:03.389Z",
+              votes: 16
+            });
           });
       });
       it("PATCH / with invalid data-type returns 400", () => {

@@ -1,4 +1,6 @@
 const connection = require("../db/connection");
+const { fetchUserByUsername } = require("../models/users");
+const { checkTopicExists } = require("../models/topics");
 
 exports.fetchArticleById = ({ article_id }) => {
   return connection("articles")
@@ -73,66 +75,53 @@ exports.fetchAllArticles = ({
   author,
   topic
 }) => {
-  let validUsernames = [];
-  let validTopics = [];
-  const searchPromises = [];
+  const dbQuery = connection("articles")
+    .select("articles.*")
+    .orderBy(sort_by, order_by)
+    .count({ comment_count: "articles.article_id" })
+    .groupBy("articles.article_id")
+    .modify(query => {
+      if (author) {
+        query.where({ author });
+      }
+      if (topic) {
+        query.where({ topic });
+      }
+    });
+  const searchPromises = [dbQuery];
   const allowedValues = ["asc", "desc"];
   if (!allowedValues.includes(order_by)) {
     order_by = "desc";
   }
   if (author) {
-    const authorPromise = connection("users")
-      .select("username")
-      .then(usernames => {
-        validUsernames = usernames.map(username => {
-          return username.username;
-        });
-      });
+    const authorPromise = fetchUserByUsername({ username: author }).then(
+      ([user]) => {
+        if (!user) {
+          return Promise.reject({
+            status: 404,
+            msg: "bad request - user not found"
+          });
+        }
+      }
+    );
     searchPromises.push(authorPromise);
   }
   if (topic) {
-    const topicPromise = connection("topics")
-      .select("*")
-      .then(topics => {
-        validTopics = topics.map(topic => {
-          return topic.slug;
-        });
-      });
-    searchPromises.push(topicPromise);
-  }
-  return Promise.all(searchPromises).then(() => {
-    if (author) {
-      if (!validUsernames.includes(author)) {
-        author = "invalid";
-      }
-      if (author === "invalid")
-        return Promise.reject({
-          status: 404,
-          msg: "bad request - user not found"
-        });
-    }
-    if (topic) {
-      if (!validTopics.includes(topic)) {
-        topic = "invalid";
-      }
-      if (topic === "invalid")
+    const topicPromise = checkTopicExists({ topic }).then(([slug]) => {
+      if (!slug) {
         return Promise.reject({
           status: 404,
           msg: "bad request - topic not found"
         });
-    }
-    return connection("articles")
-      .select("articles.*")
-      .orderBy(sort_by, order_by)
-      .count({ comment_count: "articles.article_id" })
-      .groupBy("articles.article_id")
-      .modify(query => {
-        if (author) {
-          if (author !== "invalid") query.where({ author });
-        }
-        if (topic) {
-          if (topic !== "invalid") query.where({ topic });
-        }
-      });
-  });
+      }
+    });
+    searchPromises.push(topicPromise);
+  }
+  return Promise.all(searchPromises)
+    .then(results => {
+      return results[0];
+    })
+    .catch(rejection => {
+      return Promise.reject(rejection);
+    });
 };
