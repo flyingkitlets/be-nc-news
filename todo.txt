@@ -1,5 +1,0 @@
-refactor spaghetti √ 
-nested .then in seed √ 
-controllers next({status:404, msg: 'not found'}) √ 
-status codes in Paul's list 
-use .route() in routers

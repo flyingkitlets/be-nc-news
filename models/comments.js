@@ -10,7 +10,7 @@ exports.updateCommentById = ({ body, params }) => {
     .returning("*");
 };
 
-exports.deleteCommentById = ({ body, params }) => {
+exports.deleteCommentById = ({ params }) => {
   return connection("comments")
     .where("comment_id", "=", `${params.comment_id}`)
     .delete("")

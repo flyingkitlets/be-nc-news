@@ -21,11 +21,7 @@ getArticlesById = (req, res, next) => {
 getAllComments = (req, res, next) => {
   fetchAllComments(req.params, req.query)
     .then(comments => {
-      if (comments.length === 0) {
-        next({ status: 404, msg: "not found" });
-      } else {
-        res.status(200).send({ comments });
-      }
+      res.status(200).send({ comments });
     })
     .catch(next);
 };
@@ -52,7 +48,7 @@ patchArticleById = (req, res, next) => {
 postNewComment = (req, res, next) => {
   insertNewComment(req)
     .then(article => {
-      res.status(200).send(article[0]);
+      res.status(201).send({ comment: article[0] });
     })
     .catch(next);
 };

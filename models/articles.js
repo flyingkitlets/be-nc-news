@@ -20,14 +20,26 @@ exports.updateArticleById = ({ body, params }) => {
 };
 
 exports.insertNewComment = ({ body, params }) => {
-  return connection("comments")
-    .where("article_id", "=", `${params.article_id}`)
-    .insert({
-      article_id: `${params.article_id}`,
-      author: `${body.username}`,
-      body: `${body.body}`
+  return connection("articles")
+    .select("article_id")
+    .then(articles => {
+      const allArticles = articles.map(article => {
+        return article.article_id;
+      });
+      if (!allArticles.includes(+params.article_id)) {
+        return Promise.reject({ status: 404, msg: "not found" });
+      }
     })
-    .returning(["body", "comment_id", "author", "article_id", "votes"]);
+    .then(() => {
+      return connection("comments")
+        .where("article_id", "=", `${params.article_id}`)
+        .insert({
+          article_id: `${params.article_id}`,
+          author: `${body.username}`,
+          body: `${body.body}`
+        })
+        .returning(["body", "comment_id", "author", "article_id", "votes"]);
+    });
 };
 
 exports.fetchAllComments = (
@@ -38,10 +50,21 @@ exports.fetchAllComments = (
   if (!allowedValues.includes(order_by)) {
     order_by = "desc";
   }
-  return connection("comments")
-    .select(["comment_id", "votes", "created_at", "body", "author"])
-    .where("article_id", article_id)
-    .orderBy(sort_by, order_by);
+  return connection("articles")
+    .select("article_id")
+    .then(articles => {
+      const allArticles = articles.map(article => {
+        return article.article_id;
+      });
+      if (!allArticles.includes(+article_id))
+        return Promise.reject({ status: 404, msg: "not found" });
+    })
+    .then(() => {
+      return connection("comments")
+        .select(["comment_id", "votes", "created_at", "body", "author"])
+        .where("article_id", article_id)
+        .orderBy(sort_by, order_by);
+    });
 };
 
 exports.fetchAllArticles = ({

@@ -10,8 +10,19 @@ chai.use(chaiSorted);
 describe("/api", () => {
   beforeEach(() => connection.seed.run());
   after(() => connection.destroy());
-  it("returns a JSON with information of api", () => {
+  it("GET / returns a JSON with information of api", () => {
     return request.get("/api").expect(200);
+  });
+  it("Responds with 405 for invalid method", () => {
+    const invalidMethods = ["patch", "put", "delete"];
+    const methodPromises = invalidMethods.map(method => {
+      return request[method]("/api/")
+        .expect(405)
+        .then(({ body: { msg } }) => {
+          expect(msg).to.equal("method not allowed");
+        });
+    });
+    return Promise.all(methodPromises);
   });
   describe("/topics", () => {
     it("invalid path / responds with status 404", () => {
@@ -294,6 +305,23 @@ describe("/api", () => {
           });
         });
     });
+    it("GET / responsds with object of selected article with comment count", () => {
+      return request
+        .get("/api/articles/1")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.article).to.eql({
+            article_id: 1,
+            title: "Living in the shadow of a great man",
+            body: "I find this existence challenging",
+            votes: 100,
+            topic: "mitch",
+            author: "butter_bridge",
+            created_at: "2018-11-15T12:21:54.171Z",
+            comment_count: "13"
+          });
+        });
+    });
     it("PATCH / with no body responds with status 200 and article", () => {
       return request
         .patch("/api/articles/1")
@@ -376,13 +404,13 @@ describe("/api", () => {
       });
       return Promise.all(methodPromises);
     });
-    it("POST / returns 200 and comment when passed a comment", () => {
+    it("POST / returns 201 and comment when passed a comment", () => {
       return request
         .post("/api/articles/1/comments")
         .send({ body: "here is a new comment", username: "icellusedkars" })
-        .expect(200)
+        .expect(201)
         .then(({ body }) => {
-          expect(body).to.eql({
+          expect(body.comment).to.eql({
             comment_id: 19,
             author: "icellusedkars",
             article_id: 1,
@@ -395,11 +423,11 @@ describe("/api", () => {
       return request
         .post("/api/articles/9999/comments")
         .send({ body: "here is a new comment", username: "icellusedkars" })
-        .expect(400);
+        .expect(404);
     });
     it("POST / returns 400 when passed empty comment", () => {
       return request
-        .post("/api/articles/9999/comments")
+        .post("/api/articles/1/comments")
         .send({})
         .expect(400)
         .then(({ body }) => {
@@ -408,7 +436,7 @@ describe("/api", () => {
     });
     it("POST / returns 400 when passed invalid comment", () => {
       return request
-        .post("/api/articles/9999/comments")
+        .post("/api/articles/1/comments")
         .send({ body: "here is a new comment", usernme: "icellusedkars" })
         .expect(400)
         .then(({ body }) => {
@@ -428,6 +456,15 @@ describe("/api", () => {
             "body",
             "author"
           );
+        });
+    });
+    it("GET / return empty array when article exists but there are no comments", () => {
+      return request
+        .get("/api/articles/2/comments")
+        .expect(200)
+        .then(({ body }) => {
+          // console.log(body);
+          expect(body.comments.length).to.equal(0);
         });
     });
     it("GET / sends all comments with default ordering by created_at when not given a query", () => {
@@ -511,12 +548,12 @@ describe("/api", () => {
         });
         return Promise.all(methodPromises);
       });
-      it("PATCH / with no body responds with status 400", () => {
+      it("PATCH / with no body responds with status 200 and original comment", () => {
         return request
           .patch("/api/comments/1")
           .expect(200)
           .then(({ body }) => {
-            expect(body).to.eql({
+            expect(body.comment).to.eql({
               comment_id: 1,
               author: "butter_bridge",
               article_id: 9,
@@ -533,7 +570,7 @@ describe("/api", () => {
           .send({ inc_votes: "1" })
           .expect(200)
           .then(({ body }) => {
-            expect(body).to.eql({
+            expect(body.comment).to.eql({
               comment_id: 1,
               author: "butter_bridge",
               article_id: 9,
@@ -551,6 +588,21 @@ describe("/api", () => {
           .expect(400)
           .then(({ body: { msg } }) => {
             expect(msg).to.equal("bad request - invalid entry type");
+          });
+      });
+      it("PATCH / sends 200 and comment when provided no inc_votes key", () => {
+        return request
+          .patch("/api/comments/1")
+          .send({})
+          .expect(200)
+          .then(({ body }) => {
+            expect(body.comment).to.eql({ comment_id: 1,
+              author: 'butter_bridge',
+              article_id: 9,
+              body:
+               'Oh, I\'ve got compassion running out of my nose, pal! I\'m the Sultan of Sentiment!',
+              created_at: '2017-11-22T12:36:03.389Z',
+              votes: 16 });
           });
       });
       it("PATCH / with invalid data-type returns 400", () => {
