@@ -144,6 +144,14 @@ describe("/api", () => {
           );
         });
     });
+    it("GET / has quantity of comments", () => {
+      return request
+        .get("/api/articles")
+        .expect(200)
+        .then(({ body }) => {
+          expect(+body.articles[0].comment_count).to.equal(13);
+        });
+    });
     it("GET / sends all articles in correct order", () => {
       return request
         .get("/api/articles")

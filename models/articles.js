@@ -78,11 +78,12 @@ exports.fetchAllArticles = ({
   const dbQuery = connection("articles")
     .select("articles.*")
     .orderBy(sort_by, order_by)
-    .count({ comment_count: "articles.article_id" })
+    .count({ comment_count: "comments.article_id" })
+    .leftJoin("comments", "articles.article_id", "comments.article_id")
     .groupBy("articles.article_id")
     .modify(query => {
       if (author) {
-        query.where({ author });
+        query.where("articles.author", author );
       }
       if (topic) {
         query.where({ topic });
